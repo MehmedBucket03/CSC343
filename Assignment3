@@ -1,0 +1,51 @@
+#include <iostream>
+#include <unistd.h>  
+#include <sys/wait.h> 
+#include <cstdlib>  
+#include <climits>  
+using namespace std;
+
+int findMin(int arr[], int start, int end){
+    int minValue = INT_MAX;
+    for (int i = start; i < end; i++){
+        if(arr[i] < minValue) {
+            minValue = arr[i];
+        }
+    }
+    return minValue;
+}
+
+int main() {
+    const int SIZE = 20;
+    int arr[SIZE];
+    
+    for (int i = 0; i < SIZE; ++i) {
+        arr[i] = rand() % 100;  
+    }
+
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        cerr << "Fork failed!" << endl;
+        return 1;
+    }
+
+    if (pid == 0) {
+        int minChild = findMin(arr, SIZE / 2, SIZE);
+        cout << "Child Process (PID: " << getpid() << ") - Minimum in second half: " << minChild << endl;
+        return minChild;
+    } else {
+        int minParent = findMin(arr, 0, SIZE / 2);
+        cout << "Parent Process (PID: " << getpid() << ") - Minimum in first half: " << minParent << endl;
+
+        int status;
+        wait(&status);
+        int minChild = WEXITSTATUS(status);
+        
+        // Find the overall minimum
+        int overallMin = min(minParent, minChild);
+        cout << "Overall Minimum: " << overallMin << endl;
+    }
+
+    return 0;
+}
